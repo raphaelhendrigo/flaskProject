@@ -3,12 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 
 
-import os
-
-if os.environ.get('DATABASE_URL'):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
-else:
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///your-local-sqlite-database.db'
 
 app = Flask(__name__)
 
