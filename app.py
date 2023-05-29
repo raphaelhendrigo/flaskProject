@@ -12,7 +12,7 @@ else:
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/rapha/boletim/students.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/rapha/PycharmProjects/flaskProject/students.db'
 db = SQLAlchemy(app)
 
 class Student(db.Model):
