@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
+import os
+
+SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
 
 
