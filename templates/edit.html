@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar</title>
+</head>
+
+<body>
+<h2>Alunos</h2>
+<table>
+    <tr>
+        <th>Nome</th>
+        <th>Nota 1</th>
+        <th>Nota 2</th>
+        <th>Nota 3</th>
+        <th>Nota 4</th>
+        <th>Média</th>
+        <th>Ações</th>
+    </tr>
+    {% for student in students %}
+    <tr>
+        <td>{{ student.name }}</td>
+        <td>{{ student.grade1 }}</td>
+        <td>{{ student.grade2 }}</td>
+        <td>{{ student.grade3 }}</td>
+        <td>{{ student.grade4 }}</td>
+        <td>{{ (student.grade1 + student.grade2 + student.grade3 + student.grade4) / 4 }}</td>
+        <td>
+            <a href="{{ url_for('edit', id=student.id) }}">Editar</a>
+            <form method="POST" action="{{ url_for('delete', id=student.id) }}">
+                <input type="submit" value="Excluir">
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h1>Editar aluno</h1>
+
+<form method="POST" action="{{ url_for('update', id=student.id) }}">
+    <input type="text" name="name" placeholder="Nome do aluno" value="{{ student.name }}" required>
+    <input type="number" name="grade1" placeholder="Nota 1" value="{{ student.grade1 }}" required>
+    <input type="number" name="grade2" placeholder="Nota 2" value="{{ student.grade2 }}" required>
+    <input type="number" name="grade3" placeholder="Nota 3" value="{{ student.grade3 }}" required>
+    <input type="number" name="grade4" placeholder="Nota 4" value="{{ student.grade4 }}" required>
+    <input type="submit" value="Atualizar aluno">
+</form>
+
+
+</body>
+</html>
