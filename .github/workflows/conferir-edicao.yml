@@ -1,0 +1,35 @@
+name: Conferir formato da edição oficial
+on:
+  push:
+    paths: ['.github/workflows/conferir-edicao.yml']
+permissions:
+  contents: read
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - run: |
+          python - <<'PY'
+          from urllib.request import urlopen
+          from urllib.parse import urljoin
+          from html import unescape
+          import re,json
+          p='https://diariooficial.prefeitura.sp.gov.br/md_epubli_controlador.php?acao=diario_aberto&formato=A'
+          page=urlopen(p,timeout=40).read().decode('latin1')
+          links=[unescape(x) for x in re.findall(r'href=["\']([^"\']+)',page) if 'formato=json' in x]
+          print("Links JSON", links, flush=True)
+          raw=urlopen(urljoin(p,links[0]),timeout=80).read()
+          print("Bytes",len(raw),"inicio",repr(raw[:900]),flush=True)
+          data=json.loads(raw.decode('utf-8-sig'))
+          def walk(o,path=()):
+              if len(path)>8:return
+              if isinstance(o,dict):
+                  print(path,list(o)[:30])
+                  for k,v in list(o.items())[:30]:
+                      if isinstance(v,(dict,list)):walk(v,path+(k,))
+              if isinstance(o,list) and o:
+                  print("LIST",path,len(o))
+                  walk(o[0],path+(0,))
+          walk(data)
+          PY
