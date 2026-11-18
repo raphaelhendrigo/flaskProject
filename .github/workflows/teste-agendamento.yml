@@ -1,46 +1,32 @@
-name: Diagnostico e notificacao por e-mail
-
+name: Licitações do Diário Oficial de São Paulo
 on:
   workflow_dispatch:
   push:
+    branches: [master]
     paths:
       - '.github/workflows/teste-agendamento.yml'
+      - 'scripts/notificar_actions.py'
   schedule:
-    # A cada 5 minutos ate 14h55 de 18/11/2026, horario de Brasilia.
-    - cron: '*/5 16-17 18 11 *'
-    # Ultima tentativa: 15h00 de Brasilia.
-    - cron: '0 18 18 11 *'
+    - cron: '2-59/5 * * * *'
 
 permissions:
   contents: read
 
+concurrency:
+  group: diario-oficial-licitacoes
+  cancel-in-progress: false
+
 jobs:
-  diagnostico:
+  relatorio:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Validar data e registrar gatilho
-        env:
-          EVENTO: ${{ github.event_name }}
-        run: |
-          echo "Evento: $EVENTO"
-          echo "Horario UTC: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-          echo "Horario Brasilia: $(TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z')"
-          if [ "$EVENTO" = "schedule" ]; then
-            DATA=$(TZ=America/Sao_Paulo date '+%Y-%m-%d')
-            HORA=$(TZ=America/Sao_Paulo date '+%H%M')
-            if [ "$DATA" != "2026-11-18" ] || [ "$HORA" -gt 1500 ]; then
-              echo "Fora da janela autorizada: e-mail nao sera enviado."
-              echo "SKIP_EMAIL=true" >> "$GITHUB_ENV"
-            fi
-          fi
-
-      - name: Obter codigo de envio
-        if: env.SKIP_EMAIL != 'true'
-        uses: actions/checkout@v4
-
-      - name: Enviar email aos destinatarios
-        if: env.SKIP_EMAIL != 'true'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preparar consulta ao painel municipal
+        run: python3 -m pip install playwright==1.56.0
+      - name: Consultar a edição e enviar relatório
         env:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
