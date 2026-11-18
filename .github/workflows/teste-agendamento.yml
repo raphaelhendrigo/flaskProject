@@ -1,4 +1,4 @@
-name: Diagnostico de agendamento GitHub Actions
+name: Diagnostico e notificacao por e-mail
 
 on:
   workflow_dispatch:
@@ -6,9 +6,8 @@ on:
     paths:
       - '.github/workflows/teste-agendamento.yml'
   schedule:
-    # 18/11/2026, de 11h07 ate 14h52 em Brasilia (14h-17h UTC).
+    # Somente 18 de novembro de 2026, ate as 15h de Brasilia.
     - cron: '7,22,37,52 14-17 18 11 *'
-    # Ultimo disparo previsto: 15h00 de Brasilia (18h00 UTC).
     - cron: '0 18 18 11 *'
 
 permissions:
@@ -16,24 +15,22 @@ permissions:
 
 jobs:
   diagnostico:
-    # Limita a execucao agendada especificamente a 18/11/2026.
-    if: ${{ github.event_name != 'schedule' || (github.event.schedule != '' && github.run_id != '') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Registrar diagnostico
+      - name: Registrar horario e gatilho
         env:
           EVENTO: ${{ github.event_name }}
-          REPOSITORIO: ${{ github.repository }}
-          REF: ${{ github.ref }}
         run: |
           echo "Evento: $EVENTO"
-          echo "Repositorio: $REPOSITORIO"
-          echo "Ref: $REF"
           echo "Horario UTC: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-          echo "Horario Sao Paulo: $(TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z')"
-          if [ "$EVENTO" = "schedule" ] && [ "$(TZ=America/Sao_Paulo date +%Y-%m-%d)" != "2026-11-18" ]; then
-            echo "Fora do dia autorizado, encerrando diagnostico."
-            exit 0
-          fi
-          echo "SUCESSO: runner executou o workflow."
+          echo "Horario Brasilia: $(TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z')"
+
+      - name: Obter codigo de envio
+        uses: actions/checkout@v4
+
+      - name: Enviar email aos destinatarios
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+        run: python3 scripts/notificar_actions.py
