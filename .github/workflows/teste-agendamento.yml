@@ -1,0 +1,30 @@
+name: Diagnostico de agendamento GitHub Actions
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/teste-agendamento.yml'
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Informar tipo do gatilho
+        env:
+          EVENTO: ${{ github.event_name }}
+          REPOSITORIO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          echo "Evento: $EVENTO"
+          echo "Repositorio: $REPOSITORIO"
+          echo "Ref: $REF"
+          echo "Horario UTC: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "Horario Sao Paulo: $(TZ=America/Sao_Paulo date '+%Y-%m-%d %H:%M:%S %Z')"
+          echo "SUCESSO: runner executou o workflow."
