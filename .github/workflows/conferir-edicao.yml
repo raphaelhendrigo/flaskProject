@@ -34,7 +34,9 @@ jobs:
           print("secoes",Counter(x['veiculo'] for x in data['edicao']))
           rows=[x for x in data['edicao'] if x['veiculo']=='Negócios']
           print("tipos",Counter(x['serie'] for x in rows).most_common(30))
-          for row in rows[:3]:print("exemplo", {k:str(v)[:170] for k,v in row.items()})
+          from html import unescape
+          for row in rows[:6]:
+              print("estrutura", ' '.join(unescape(re.sub(r'<[^>]+>',' ',row['conteudo'])).split())[:650])
           def walk(o,path=()):
               if len(path)>8:return
               if isinstance(o,dict):
