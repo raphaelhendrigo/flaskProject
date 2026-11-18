@@ -28,7 +28,13 @@ jobs:
               info=page.evaluate("""async path => {const r=await fetch(path);let t=await r.text(); return {status:r.status,kind:r.headers.get('content-type'),length:t.length,first:t.slice(0,150),text:t};}""",link.get_attribute("href"))
           body=info.pop("text")
           print("Resposta",info,flush=True)
-          data=json.loads(body.lstrip('\\ufeff'))
+          data,n=json.JSONDecoder().raw_decode(body.lstrip(chr(65279)))
+          print("final",repr(body[n:n+100]))
+          from collections import Counter
+          print("secoes",Counter(x['veiculo'] for x in data['edicao']))
+          rows=[x for x in data['edicao'] if x['veiculo']=='Negócios']
+          print("tipos",Counter(x['serie'] for x in rows).most_common(30))
+          for row in rows[:3]:print("exemplo", {k:str(v)[:170] for k,v in row.items()})
           def walk(o,path=()):
               if len(path)>8:return
               if isinstance(o,dict):
