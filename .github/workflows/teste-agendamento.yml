@@ -1,6 +1,11 @@
 name: Licitações do Diário Oficial de São Paulo
 on:
   workflow_dispatch:
+    inputs:
+      verificar_intervalo:
+        description: Executar três consultas com intervalo de cinco minutos
+        type: boolean
+        default: false
   push:
     branches: [master]
     paths:
@@ -19,7 +24,7 @@ concurrency:
 jobs:
   relatorio:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,4 +35,15 @@ jobs:
         env:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
-        run: python3 scripts/notificar_actions.py
+          VERIFICAR_INTERVALO: ${{ github.event_name == 'push' || inputs.verificar_intervalo }}
+        shell: bash
+        run: |
+          rodadas=1
+          if [[ "$VERIFICAR_INTERVALO" == "true" ]]; then rodadas=3; fi
+          inicio=$SECONDS
+          for ((i=0; i<rodadas; i++)); do
+            espera=$((inicio + i*300 - SECONDS))
+            if ((espera > 0)); then sleep "$espera"; fi
+            echo "Consulta $((i+1)) de $rodadas em $(date -u -Iseconds); evento $GITHUB_EVENT_NAME"
+            timeout 240s python3 scripts/notificar_actions.py
+          done
