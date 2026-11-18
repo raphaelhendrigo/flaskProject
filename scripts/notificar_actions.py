@@ -18,9 +18,9 @@ MODALIDADE = re.compile(r"preg[ãâa]o|concorr[êe]ncia|licita[çc][ãa]o|di[áa
 
 # O painel agrupa por processo e inclui também eventos históricos de outras datas.
 LER_PAGINA = """() => Array.from(document.querySelectorAll('#sumarioNegocio .dadosDocumentoNegocio'), item => {
-    const grupo = item.closest('li.parent_li');
+    const grupo = item.closest('li')?.parentElement?.closest('li');
     const processo = grupo?.querySelector('.detalhesUnidade');
-    const ato = item.querySelector('a.nroSei');
+    const ato = item.querySelector('a[href*=md_epubli_visualizar]') || item.querySelector('a.nroSei');
     return {
         processo: processo?.querySelector('a')?.textContent.trim() || '',
         modalidade: processo?.textContent.trim() || '',
@@ -51,11 +51,16 @@ def consultar():
             if inicio != esperado or not inicio <= fim <= total:
                 raise RuntimeError("Paginação do painel inconsistente")
             eventos = page.evaluate(LER_PAGINA)
-            if not eventos or any(not row["evento"] or not row["modalidade"] for row in eventos):
-                raise RuntimeError("O painel retornou registros em formato desconhecido")
+            if not eventos:
+                raise RuntimeError(f"Página de resultados {inicio} a {fim} sem eventos legíveis")
+            print(f"Página {inicio} a {fim} de {total}: {len(eventos)} eventos", flush=True)
             for row in eventos:
+                if not row["modalidade"]:
+                    raise RuntimeError(f"Processo sem modalidade na página {inicio}: {row['detalhes'][:120]}")
                 if f"Publicado em {data}" not in row["detalhes"] or not MODALIDADE.search(row["modalidade"]):
                     continue
+                if not row["evento"] or not row["link"]:
+                    raise RuntimeError(f"Ato incompleto no processo {row['processo']}: {row['detalhes'][:160]}")
                 link = urlsplit(urljoin(PAINEL, row["link"]))
                 if link.hostname != "diariooficial.prefeitura.sp.gov.br" or not row["processo"]:
                     raise RuntimeError("Documento sem identificação ou link oficial")
