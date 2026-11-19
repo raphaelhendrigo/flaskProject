@@ -1,0 +1,23 @@
+name: Consultar edição pública do Diário da Cidade
+on:
+  push:
+    branches: [master]
+    paths: ['monitor-doc/pedido.json']
+permissions:
+  contents: read
+jobs:
+  obter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: python3 -m pip install playwright==1.56.0
+      - name: Baixar a edição e proteger a transferência
+        run: python3 scripts/consultar_edicao_publica.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: edicao-publica
+          path: edicao.p7m
+          retention-days: 1
