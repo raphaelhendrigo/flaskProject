@@ -1,49 +1,12 @@
-name: Licitações do Diário Oficial de São Paulo
+name: Licitações do Diário Oficial de São Paulo (desativado)
 on:
   workflow_dispatch:
-    inputs:
-      verificar_intervalo:
-        description: Executar três consultas com intervalo de cinco minutos
-        type: boolean
-        default: false
-  push:
-    branches: [master]
-    paths:
-      - '.github/workflows/teste-agendamento.yml'
-      - 'scripts/notificar_actions.py'
-  schedule:
-    - cron: '2-59/5 * * * *'
 
-permissions:
-  contents: read
-
-concurrency:
-  group: diario-oficial-licitacoes
-  cancel-in-progress: false
+permissions: {}
 
 jobs:
   relatorio:
+    if: ${{ false }}
     runs-on: ubuntu-latest
-    timeout-minutes: 18
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Preparar consulta ao painel municipal
-        run: python3 -m pip install playwright==1.56.0
-      - name: Consultar a edição e enviar relatório
-        env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
-          VERIFICAR_INTERVALO: ${{ github.event_name == 'push' || inputs.verificar_intervalo }}
-        shell: bash
-        run: |
-          rodadas=1
-          if [[ "$VERIFICAR_INTERVALO" == "true" ]]; then rodadas=3; fi
-          inicio=$SECONDS
-          for ((i=0; i<rodadas; i++)); do
-            espera=$((inicio + i*300 - SECONDS))
-            if ((espera > 0)); then sleep "$espera"; fi
-            echo "Consulta $((i+1)) de $rodadas em $(date -u -Iseconds); evento $GITHUB_EVENT_NAME"
-            timeout 240s python3 scripts/notificar_actions.py
-          done
+      - run: echo 'Monitoramento de licitações desativado'
